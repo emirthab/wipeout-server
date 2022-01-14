@@ -1,6 +1,13 @@
-1 = send connection for get id ->
-2 = response for id <-
+1 = send connection for get id <-
+2 = response for id ->
 3 = player connected / and player infos [resp,playerid,playername] ->
 4 = connected players get info (connected all player) {conList} ->
 5 = player position [5,id,pos] <-
 6 = player position [6,id,pos] ->
+7 = player disconnected to other players [7,id] ->
+8 = ping get <-
+9 = ping post ->
+10 = player rotation [10,id,rot] <-
+11 = player rotation [11,id,rot] ->
+12 = chat get <-
+13 = chat push ->
