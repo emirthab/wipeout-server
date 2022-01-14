@@ -1,0 +1,6 @@
+1 = send connection for get id ->
+2 = response for id <-
+3 = player connected / and player infos [resp,playerid,playername] ->
+4 = connected players get info (connected all player) {conList} ->
+5 = player position [5,id,pos] <-
+6 = player position [6,id,pos] ->
