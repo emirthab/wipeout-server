@@ -1,9 +1,13 @@
+from multiprocessing.connection import Client
 import discord
+from discord.ext import commands
 
-TOKEN = 'OTMxNjI0Mjg0ODY5MjMwNTky.YeHIug.RaBG_Ep6rFaaZ1lc8Ck0djp0398'
+TOKEN = 'OTMxNjI0Mjg0ODY5MjMwNTky.YeHIug.PiRG44WiOI5OP3gWsWXLnxqjkRQ'
 GUILD = '931623089459048469'
 
 bot = discord.Client()
+
+guild = bot.get_guild(931623089459048469)
 
 @bot.event
 async def on_ready():
@@ -13,12 +17,13 @@ async def on_ready():
     await messagge.add_reaction(emoji='🏃')
 
 @bot.event
-async def on_reaction_add(reaction, user):
-    channel = bot.get_channel('931623090046238741')
-    if reaction.message.channel.id != channel:
-      return
-    if reaction.emoji == "🏃":
-      await reaction.message.channel.send("asd")
+async def on_message(message):
+    channel = bot.get_channel(931623090046238741)
+    if message.channel == channel:
+        member = message.author
+        if not member.bot:
+            await channel.send(member.id)
+            await message.delete()
 
         
 bot.run(TOKEN)
