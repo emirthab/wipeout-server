@@ -1,4 +1,10 @@
 import discord
+from pyngrok import ngrok
+
+CONFIG_PATH = "./ngrokconfig.yml"
+
+ngrok.connect(config_path=CONFIG_PATH)
+
 
 TOKEN = 'OTMxNjI0Mjg0ODY5MjMwNTky.YeHIug.RaBG_Ep6rFaaZ1lc8Ck0djp0398'
 GUILD = '931623089459048469'
