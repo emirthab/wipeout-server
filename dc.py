@@ -1,6 +1,10 @@
 from multiprocessing.connection import Client
 import discord
-from discord.ext import commands
+from pyngrok import ngrok
+
+CONFIG_PATH = "./ngrokconfig.yml"
+
+ngrok.connect(config_path=CONFIG_PATH)
 
 TOKEN = 'OTMxNjI0Mjg0ODY5MjMwNTky.YeHIug.PiRG44WiOI5OP3gWsWXLnxqjkRQ'
 GUILD = '931623089459048469'
