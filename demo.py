@@ -1,12 +1,17 @@
-import time
+from pyngrok import ngrok
+from flask import Flask
+from src.http_server import app
+import json
 
-jsod = []
+App = Flask(__name__)
+App.register_blueprint(app)
+
+NGROK_CONFIG_PATH = "./ngrokconfig.yml"
+ngrok.connect(config_path=NGROK_CONFIG_PATH)
+
+f = open("./server_config.json")
+CONFIG = json.load(f)
 
 
-jsod.append({"isim":"alex","yas":12})
-jsod.append({"isim":"emirtaha","yas":12})
-jsod.append({"isim":"emir","yas":12})
-
-output = [x for x in jsod if x["isim"] is not "alex"]
-print(str(time.time()).split(".")[0])
-print(output)
+if __name__ == "__main__":
+    App.run(debug=True,port=CONFIG["http-server"]["port"],host=CONFIG["http-server"]["ip"])

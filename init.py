@@ -1,78 +1,77 @@
 import asyncio
-from xmlrpc.client import MAXINT
+from src.websocket import server
+import threading
+from pyngrok import ngrok
 import websockets
+from flask import Flask
+from src.http_server import app
+from src.dc import bot
+import logging
+import click
+import json
+from src.logger import consoleLog
 
-connected = set()
+App = Flask(__name__)
+App.register_blueprint(app)
 
-conList = []
-maxId = 0
+NGROK_CONFIG_PATH = "./ngrokconfig.yml"
+ngrok.connect(config_path=NGROK_CONFIG_PATH)
 
-async def server(websocket, path):
-    connected.add(websocket)
-    try:
-        async for message in websocket:
-            msg = msg2eval(message)
+f = open("./server_config.json")
+CONFIG = json.load(f)
 
-            #send connection for get id                        
-            if msg[0] == 1:
-                global maxId ; maxId+=1 ; _id = maxId ; name = str(msg[1]) ;
-                output,newList = [],[]
-                conList.append( {
-                    "id": _id,
-                    "name": name,
-                    "websocket" : websocket
-                } )
-                await websocket.send( str([2,str(_id)]) )                
-                #filter "websocket" key
-                for con in conList:                    
-                    obj={} ; [obj.update({key:con[key]}) for key in con if key!="websocket"] and newList.append(obj)
-                    output = [x for x in newList if x["id"] is not _id]
-                await websocket.send(str([4,output]))
-                #send other clients connecting info
-                for conn in connected:
-                    if conn != websocket : await conn.send(str( [3,_id,name] ))
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
-            #player position
-            elif msg[0] == 5:
-                _id = msg[1] ; pos = str(msg[2]).replace("(","") ; _pos = pos.replace(")","")
-                for conn in connected:
-                    if conn != websocket : await conn.send(str( [6,_id,_pos] ))
+def secho(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
 
-            elif msg[0] == 8:
-                await websocket.send(str([9]))
-            
-            elif msg[0] == 10:
-                _id = msg[1] ; rot = str(msg[2]).replace("(","") ; _rot = rot.replace(")","")
-                for conn in connected:
-                    if conn != websocket : await conn.send(str( [11,_id,_rot] ))
-            
-            elif msg[0] == 12:
-                _id = msg[1] ; data = str(msg[2]) ; name = ""
-                for con in conList:
-                    if con["id"] == _id : name = str(con["name"])
-                    print(name)
-                for conn in connected:
-                    await conn.send(str( [13,name,data] ))
-    finally:
-        _id = None
-        for con in conList:
-            if con["websocket"] == websocket:
-                _id = con["id"]
-                conList.remove(con)
+def echo(text, file=None, nl=None, err=None, color=None, **styles):
+    pass
 
-        connected.remove(websocket)
+click.echo = echo
+click.secho = secho
 
-        for conn in connected:
-            await conn.send(str( [7,_id] ))
-    
-def msg2eval(data):
-    return eval(data.decode("utf_8"))
+def printLogo():
+    logo = "\033[95m                                                   __      \n\
+                __                                /\ \__ \n\
+     __  __  __/\_\  _____      __    ___   __  __\ \ ,_\  \n\
+    /\ \/\ \/\ \/\ \/\ '__`\  /'__`\ / __`\/\ \/\ \\ \ \/  \n\
+    \ \ \_/ \_/ \ \ \ \ \L\ \/\  __//\ \L\ \ \ \_\ \\ \ \_ \n\
+     \ \___x___/'\ \_\ \ ,__/\ \____\ \____/\ \____/ \ \__\ \n\
+      \/__//__/   \/_/\ \ \/  \/____/\/___/  \/___/   \/__/ \n\
+                       \ \_\                               \n\
+                        \/_/                               \n \n\
+    \033[92m www.github.com/emirthab/wipeout-server \n \
+    \033[36mversion = 0.01a \033[0m \n \n"
+    print(logo)
 
-async def start_server(handler, host, port):
+printLogo()
+
+async def start_websocket(handler, host, port):
     async with websockets.serve(handler, host, port) as s:
+        consoleLog("WEBSOCKET","succ","Websocket started succesfully!")
         await s.wait_closed()
 
+def threadWebsocket():
+    try:
+        consoleLog("WEBSOCKET","info","Trying to start websocket server...")
+        asyncio.run(start_websocket(server, CONFIG["websocket"]["ip"], CONFIG["websocket"]["port"]))
+    except Exception as exc:
+        consoleLog("WEBSOCKET","err",str(exc))
+
+runWebsocket = threading.Thread(target=threadWebsocket)
+runWebsocket.start()
+
 try:
-    asyncio.run(start_server(server, "0.0.0.0", 5000))
-except KeyboardInterrupt as exc:
-    print(exc)
+    consoleLog("DISCORDBOT","info","Trying to start Discord Bot...")
+    bot.run(CONFIG["discord"]["token"])
+except Exception as exc:
+    consoleLog("DISCORDBOT","err",str(exc))
+
+if __name__ == "__main__":
+    pass
+    #App.run(debug=True,port=CONFIG["http-server"]["port"],host=CONFIG["http-server"]["ip"])
+
+
+
