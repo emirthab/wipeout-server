@@ -1,5 +1,19 @@
 import time
-import atexit
+from datetime import date
+
+replacer = ["\033[94m","\033[96m","\033[95m","\033[36m","\033[92m","\033[93m","\033[91m","\033[1m","\033[0m"]
+today = date.today()
+t1 = time.strftime("%H:%M:%S", time.localtime())
+d1 = today.strftime("%d/%m/%Y")
+
+def getTime():
+    today = date.today()
+    t1 = time.strftime("%H-%M-%S", time.localtime())
+    d1 = today.strftime("%d-%m-%Y")
+    Time = d1+"_"+t1
+    return Time
+
+t1 = getTime()
 
 lastLogFile = ""
 
@@ -8,7 +22,7 @@ def inColor(text,color):
         return("\033[94m"+text+"\033[0m")
     elif color == "cyan":
         return("\033[96m"+text+"\033[0m")
-    elif color == "puple":
+    elif color == "purple":
         return("\033[95m"+text+"\033[0m")
     elif color == "darkcyan":
         return("\033[36m"+text+"\033[0m")
@@ -33,20 +47,26 @@ def consoleLog(logger,thread,log):
     elif thread == "info":
         logger += inColor(" thread/INFO","blue")
     elif thread == "succ":
-        logger += inColor(" thread/INFO","green")
+        logger += inColor(" thread/SUCCESS","green")
+    else:
+        logger += inColor(" "+thread,"bold")
 
     _log = current_time + " " + logger + " : " + log
     print(_log)
     global lastLogFile
-    lastLogFile = lastLogFile + _log + "\n"
-
-def exit_handler():
-    consoleLog(inColor("[SERVER]","yellow") + inColor(" / Server thread/INFO","blue"),"Stopping server...")
+    lastLogFile = lastLogFile + _log + "\n" 
 
 def logSave():
-    f = open("log.txt", "a")
-    f.write(lastLogFile)
-    f.close()
+    try:
+        global lastLogFile
+        for rep in replacer:
+            lastLogFile = lastLogFile.replace(rep,"")
+        t2 = getTime()
+        f = open("./logs/"+ t1 + "__" + t2 +".txt", "a")
+        f.write(lastLogFile)
+        f.close()
+    except Exception as exc:
+        print(exc)
 
-atexit.register(exit_handler)
+
     

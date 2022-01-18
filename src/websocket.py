@@ -37,21 +37,28 @@ async def server(websocket, path):
                 for conn in connected:
                     if conn != websocket : await conn.send(str( [6,_id,_pos] ))
 
+            #Ping
             elif msg[0] == 8:
                 await websocket.send(str([9]))
             
+            #Player rotation
             elif msg[0] == 10:
                 _id = msg[1] ; rot = str(msg[2]).replace("(","") ; _rot = rot.replace(")","")
                 for conn in connected:
                     if conn != websocket : await conn.send(str( [11,_id,_rot] ))
             
+            #Chat
             elif msg[0] == 12:
                 _id = msg[1] ; data = str(msg[2]) ; name = ""
                 for con in conList:
                     if con["id"] == _id : name = str(con["name"])
-                    print(name)
                 for conn in connected:
                     await conn.send(str( [13,name,data] ))
+
+            #Player animations
+            elif msg[0] == 14:
+                for conn in connected:
+                    if conn != websocket : await conn.send(str( [15,msg[1],msg[2]] ))
     finally:
         _id = None
         for con in conList:

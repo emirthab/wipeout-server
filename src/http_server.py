@@ -9,6 +9,13 @@ db = sql.connect("database.db",check_same_thread=False)
 cur = db.cursor()
 lock = threading.Lock()
 
+@app.route("/testconnection")
+def testConnection():
+    try:
+        return("OK")
+    except Exception as exc:
+        return(str(exc))
+
 def execute(sql):
     try:
         lock.acquire(True)
@@ -28,32 +35,38 @@ def login():
 @app.route("/register",methods=["POST"])
 def register():
     content = request.json
+    print(content)
     userName = content["name"]
     password = content["pass"]
     user =  getUserByName(userName)
-    if len(list(user)) == 0:
-        _id = getLastId("players")
-        add = "INSERT INTO players VALUES ("+ _id + "," +userName + "," + password + ")"
-        execute(add)
-        code = randint(100000,999999)
-        add = "INSERT INTO discord_code VALUES ("+ _id + "," + code + ")"
-        execute(add)
-        return {
-            "response": "OK",
-            "dc_code": str(code)
-            }
+    if len(userName) > 4 and len(password) > 7:
+        if len(list(user)) == 0:
+            _id = getLastId("players")
+            add = "INSERT INTO players VALUES ("+ _id + "," +userName + "," + password + ")"
+            execute(add)
+            code = randint(100000,999999)
+            add = "INSERT INTO discord_code VALUES ("+ _id + "," + code + ")"
+            execute(add)
+            return {
+                "response": "OK",
+                "dc_code": str(code)
+                }
+        else:
+            return {"response": "Kullanıcı adı zaten tanımlı.",}
+    elif len(userName) < 4:
+        return {"response":"Kullanıcı adı en az 4 karakter olmalı."}
     else:
-        return {"response": "username is already used",}
+        print(len(userName))
+        return {"response":"Şifre en az 8 karakter olmalı."}
 
 def getUserByName(name):
-    sql = "SELECT * FROM users WHERE name = '"+ name +"'"
+    sql = "SELECT * FROM players WHERE name = '"+ name +"'"
     try:
         lock.acquire(True)
         cur.execute(sql)
-        fetch = cur.fetchall()
+        return cur.fetchall()
     finally:
         lock.release()
-        return fetch
 
 def getLastId(table_name):
     sqlid = "SELECT MAX(CAST(id AS INT )) FROM "+table_name+";"

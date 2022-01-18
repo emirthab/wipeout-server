@@ -1,3 +1,4 @@
+for server
 1 = send connection for get id <-
 2 = response for id ->
 3 = player connected / and player infos [resp,playerid,playername] ->
@@ -11,3 +12,5 @@
 11 = player rotation [11,id,rot] ->
 12 = chat get <-
 13 = chat push ->
+14 = get animation <-
+15 = post animation ->
