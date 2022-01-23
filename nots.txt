@@ -14,3 +14,4 @@ for server
 13 = chat push ->
 14 = get animation <-
 15 = post animation ->
+16 = kick player (disconnect) ->

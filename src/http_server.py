@@ -1,11 +1,14 @@
+#TR470006701000000051107194 Tufan Özyurt
+from secrets import token_urlsafe
 import sqlite3 as sql
 import threading
 from random import randint
 from flask import Blueprint, request
+from src.websocket import tokens
 
 app = Blueprint("app",__name__)
 
-db = sql.connect("database.db",check_same_thread=False)
+db = sql.connect("database.sqlite",check_same_thread=False)
 cur = db.cursor()
 lock = threading.Lock()
 
@@ -30,7 +33,36 @@ execute("CREATE TABLE if not exists 'discord_code' (id, discord_code)")
 
 @app.route("/login",methods=["POST"])
 def login():
-    print("")
+    content = request.json
+    userName = content["name"]
+    password = content["pass"]
+    user =  getUserByName(userName)
+    if len(list(user)) != 0:
+        sql = "SELECT * FROM players WHERE name = '"+ userName +"'"
+        try:
+            lock.acquire(True)
+            cur.execute(sql)
+            fetch = cur.fetchall()[0]
+            password_2 = fetch[2]
+            playerID = fetch[0]
+        finally:
+            lock.release()
+        if str(password) == str(password_2):
+            fetch = getDcIdFromUserId(playerID)
+
+            if len(list(fetch)) > 0:
+                token = token_urlsafe(64)
+                tokens.append(token)
+                return {
+                    "response":"OK",
+                    "token": str(token)
+                }
+            else:
+                return {"response":"Discordunuzu bağlayın."}
+        else:
+            return {"response":"Yanlış şifre ya da kullanıcı adı"}
+    else:
+        return {"response":"Yanlış şifre ya da kullanıcı adı"}
 
 @app.route("/register",methods=["POST"])
 def register():
@@ -39,13 +71,13 @@ def register():
     userName = content["name"]
     password = content["pass"]
     user =  getUserByName(userName)
-    if len(userName) > 4 and len(password) > 7:
+    if len(userName) > 3 and len(password) > 7:
         if len(list(user)) == 0:
             _id = getLastId("players")
-            add = "INSERT INTO players VALUES ("+ _id + "," +userName + "," + password + ")"
+            add = "INSERT INTO players VALUES ("+ str(_id) + ",'" +userName + "','" + password + "')"
             execute(add)
             code = randint(100000,999999)
-            add = "INSERT INTO discord_code VALUES ("+ _id + "," + code + ")"
+            add = "INSERT INTO discord_code VALUES ("+ str(_id) + ", '" + str(code) + "')"
             execute(add)
             return {
                 "response": "OK",
@@ -56,7 +88,7 @@ def register():
     elif len(userName) < 4:
         return {"response":"Kullanıcı adı en az 4 karakter olmalı."}
     else:
-        print(len(userName))
+        print(len(password))
         return {"response":"Şifre en az 8 karakter olmalı."}
 
 def getUserByName(name):
@@ -83,3 +115,13 @@ def getLastId(table_name):
     else:
         _id += 1
     return _id
+
+def getDcIdFromUserId(userID):
+    sql = "SELECT discord_id FROM discord_id WHERE id = "+ str(userID)
+    try:
+        lock.acquire(True)
+        cur.execute(sql)
+        fetch = cur.fetchall()
+        return fetch
+    finally:
+        lock.release()

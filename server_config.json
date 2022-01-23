@@ -1,7 +1,17 @@
 {
     "discord":{
-        "token": "OTMxNjI0Mjg0ODY5MjMwNTky.YeHIug.M0jLAT-d8D12m64Vigd9GHLfZ3Q",
-        "guild": "931623089459048469"
+
+        "token": "",
+        "guild": 931623089459048469,
+        "code_channel": 931623090046238741,
+
+        "chat_icon_roles":{
+            "934556191030390844" : "crovn-5"
+        },
+
+        "chat_color_roles":{
+            "934556293149114408" : "#AAFF00"
+        }
     },
 
     "websocket":{
